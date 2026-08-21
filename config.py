@@ -24,7 +24,7 @@ def first_config():
     deps.TOKEN = getenv('TOKEN')
     deps.test_mode = bool(getenv('test_mode'))
     deps.MAIN_CURRENCY_ID = 1
-    deps.VERSION = '1.0'
+    deps.VERSION = '1.1 Добавлена команда !wipe только для владельца'
     deps.main_db.close()
     deps.main_db = cls.NewConnection('data/main.db', check_same_thread=False)
     deps.main_db.row_factory = sql.Row

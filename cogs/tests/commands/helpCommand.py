@@ -85,7 +85,8 @@ class HelpCommand(Cog):
                     ),
                     Separator(),
                     Separator(),
-                    TextDisplay('-# ' + deps.VERSION)
+                    TextDisplay('-# ' + deps.VERSION),
+                    TextDisplay('-# Проект с любовью разработан группой EGR')
                 )
             ]
         await ctx.send(components=components, flags=MessageFlags(is_components_v2=True), delete_after=de) # type: ignore
