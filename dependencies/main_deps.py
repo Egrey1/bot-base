@@ -11,10 +11,13 @@ VERSION: str = ... # type: ignore
 test_mode: bool = ... # type: ignore
 
 class Ask:
+    """
+    Статический класс для вопросов
+    """
     @staticmethod
     def add(member_id: int, complete_handler: EventHandler | None = None, error_handler: EventHandler | None = None, checker: Callable[[disnake.Message], disnake.Embed | None] | None = None, args: list = [], kwargs: dict = {}):
         """
-        Добавление поиска для пользователя
+        Добавление вопроса
 
         Params:
             member_id (int): ID пользователя
@@ -26,10 +29,13 @@ class Ask:
         """
 
 class Search:
+    """
+    Статический класс для поиска и передачи в обработчик экзеемпляров
+    """
     @staticmethod
-    def add(member_id: int, title: str, items: dict[str, Any], complete_handler: EventHandler | None = None, error_handler: EventHandler | None = None, args: list = [], kwargs: dict = {}) -> disnake.Embed:
+    def add(member_id: int, title: str, items: dict[str, Any], complete_handler: EventHandler | None = None, error_handler: EventHandler | None = None, args: list = [], kwargs: dict = {}) -> list[disnake.Embed]:
         """
-        Добавление поиска для пользователя
+        Добавление поиска
 
         Params:
             member_id (int): ID пользователя
@@ -41,7 +47,7 @@ class Search:
             kwargs (dict): Дополнительные именованные аргументы для обработчиков
             
         Returns:
-            disnake.Embed: Embed с элементами поиска. Его отправлять лучше сразу!
+            list[disnake.Embed]: Список эмбедов. Их может быть много по 50 строк на каждый, так что их лучше СРАЗУ отправлять по пять
         """
         ...
 
@@ -60,4 +66,14 @@ class EventHandler:
     def InvokeHandler(self, *args, **kwargs):
         """
         Обработка сработавшего события. В качестве аргументов принимает аргументы функций обработчиков
+        """
+    
+    def add_event(self, event: Callable[..., Any]):
+        """
+        Добавление функции в обработчик
+        """
+        
+    def add_coro_event(self, event: Callable[..., Awaitable[Any]])
+        """
+        Добавление асинхронной функции в обработчик
         """

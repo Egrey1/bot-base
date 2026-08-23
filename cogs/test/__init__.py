@@ -9,7 +9,7 @@ class Test(commands.Cog):
     async def error_handler(self, message: disnake.Message, embed: disnake.Embed, *args, **kwargs):
         await message.channel.send(embed=embed)
         
-    @commands.command(name='test', description='Тестовая команда')
+    @commands.command(name='test', description='Команда для теста deps.Search()')
     async def test_command(self, ctx: commands.Context):
         d = {
             'a': 1,
@@ -23,6 +23,10 @@ class Test(commands.Cog):
         complete = deps.EventHandler(coro_event=self.complete_handler)
         error = deps.EventHandler(coro_event=self.error_handler)
         await ctx.send(embed=deps.Search.add(ctx.author.id, 'Выберите элемент', d, complete_handler=complete, error_handler=error, args=[1, 2, 3], kwargs={'a': 1, 'b': 2}))
+    
+    @commands.command(name='version', description='Посмотреть версию бота')
+    async def version_command(self, ctx: commands.Context):
+        await ctx.send(deps.VERSION)
         
 def setup(bot):
     bot.add_cog(Test())

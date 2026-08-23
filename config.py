@@ -23,7 +23,7 @@ def first_config():
     
     deps.TOKEN = getenv('TOKEN')
     deps.test_mode = bool(getenv('test_mode'))
-    deps.VERSION = '0.0 Тесты'
+    deps.VERSION = '0.0 База для всех ботов группы EGR'
     
     deps.EventHandler = cls.EventHandler
     deps.Search = cls.Search
