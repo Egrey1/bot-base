@@ -1,6 +1,8 @@
 from typing import Any, Callable, Awaitable, List
 
 from ..library import Embed, Colour, Context, Message, deps, logging, asyncio
+import disnake
+from disnake.ext import commands
 
 class EventHandler:
     events: List[Callable[..., Any]] | None = None
@@ -37,7 +39,7 @@ class EventHandler:
         else:
             return cls(None, None)
 
-class Search:
+class Search(commands.Cog):
     def _desctruct(self, _1, _2, _3):
         self.member_id = -1
 
