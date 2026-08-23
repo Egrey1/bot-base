@@ -39,67 +39,81 @@ class EventHandler:
         else:
             return cls(None, None)
 
-class Search(commands.Cog):
-    def _desctruct(self, _1, _2, _3):
-        self.member_id = -1
-
-    def __init__(self, label: str, items: dict[str, Any], member_id: int, complete_handler: EventHandler | None = None, error_handler: EventHandler | None = None):
-        self.complete_handler = EventHandler.copy(complete_handler)
-        self.error_handler = EventHandler.copy(error_handler)
-        self.label = label
-        self.items = items
-        self.member_id = member_id
-        self.complete_handler.add_event(self._desctruct)
-        self.error_handler.add_event(self._desctruct)
+class Ask(commands.Cog):
+    members: dict[int, tuple[EventHandler, EventHandler, Callable[[disnake.Message], disnake.Embed | None] | None, list, dict, bool]] = {}
     
-    async def send_label(self, ctx: Context):
-        m = await ctx.send(embed=Embed(
-            title=self.label,
-            description="\n".join((str(i + 1) + '. ' + item) for i, item in enumerate(self.items.keys()))
-        ))
-        await self.taimer(m)
-
-    async def taimer(self, message):
-        await asyncio.sleep(30)
-        if self.member_id != -1:
-            await self.error_handler.invokeHandler(message, Embed(
-                title='Время вышло',
-                description='Операция была остановлена',
-                colour=Colour.red()
-            ), self.member_id)
+    @staticmethod
+    def add(member_id: int, complete_handler: EventHandler | None = None, error_handler: EventHandler | None = None, checker: Callable[[disnake.Message], disnake.Embed | None] | None = None, args: list = [], kwargs: dict = {}, bounce: bool = False):
+        complete_handler = EventHandler.copy(complete_handler)
+        error_handler = EventHandler.copy(error_handler)
+        Ask.members[member_id] = (complete_handler, error_handler, checker, args, kwargs, bounce)
+        asyncio.create_task(Ask.__cancel(member_id))
     
+    @staticmethod
+    async def __cancel(member_id: int):
+        await asyncio.sleep(5 * 60)
+        if member_id in Ask.members:
+            del Ask.members[member_id]
+    
+    @commands.Cog.listener('on_message')
     async def on_message_handler(self, message: Message):
         try:
-            if message.author.id != self.member_id:
+            if message.author.id not in Ask.members:
                 return
             
-            if message.content.startswith(deps.PREFIX):
-                return
-
-            if not message.content.isdigit():
-                embed=Embed(
-                    title='Неверные данные',
-                    description='Ожидалось целое число',
-                    colour=Colour.red()
-                )
-                await self.error_handler.invokeHandler(message, embed, self.member_id)
+            complete_handler, error_handler, checker, args, kwargs, bounce = Ask.members.pop(message.author.id)
+            if not bounce:
+                Ask.members[message.author.id] = (complete_handler, error_handler, checker, args, kwargs, True)
                 return
             
-            choice = int((int(message.content) ** 2) ** 0.5)
-            if choice > len(self.items):
-                embed=Embed(
-                    title='Неверные данные',
-                    description='Ожидалось целое число до ' + str(len(self.items)),
-                    colour=Colour.red()
-                )
-                await self.error_handler.invokeHandler(message, embed, self.member_id)
+            checker_result = checker(message) if checker else None
+            
+            if isinstance(checker_result, Embed):
+                await error_handler.invokeHandler(message, checker_result, *args, **kwargs)
                 return
             
-            await self.complete_handler.invokeHandler(message, self.items.get(list(self.items.keys())[choice - 1]), self.member_id)
+            await complete_handler.invokeHandler(message, *args, **kwargs)
         except Exception as e:
-            await self.error_handler.invokeHandler(message, Embed(
+            await error_handler.invokeHandler(message, Embed(
                 title='Неизвестная ошибка',
                 description='Проверьте доступность прав бота',
                 colour=Colour.red()
-            ), self.member_id)
-            logging.error(e)    
+            ), *args, **kwargs)
+            logging.error(e)
+            
+
+class Search(Ask): 
+    @staticmethod
+    async def __search_complete_handler(message: disnake.Message, items: dict[str, Any], complete_handler: EventHandler, *args: list, **kwargs: dict):
+        item = list(items.keys())[int(message.content) - 1]
+        await complete_handler.invokeHandler(message, item, args, kwargs)
+        
+    @staticmethod
+    def add(member_id: int, title: str, items: dict[str, Any], complete_handler: EventHandler | None = None, error_handler: EventHandler | None = None, args: list = [], kwargs: dict = {}):
+        search_complete_handler = EventHandler(coro_event=Search.__search_complete_handler)
+        def checker(message: disnake.Message):
+            num = 0
+            try:
+                num = int(message.content)
+            except ValueError:
+                return Embed(
+                    title='Ошибка',
+                    description='Вы должны ввести число',
+                    colour=Colour.red()
+                )
+            if num < 1 or num > len(items):
+                return Embed(
+                    title='Ошибка',
+                    description=f'Вы должны ввести число от 1 до {len(items)}',
+                    colour=Colour.red()
+                )
+                
+        Ask.add(member_id, search_complete_handler, error_handler, checker, [items] + [complete_handler] + args, kwargs)
+        return Embed(
+            title=title,
+            description='\n'.join([f'**{i + 1}.** {item}' for i, item in enumerate(items.keys())]),
+            colour=Colour.green()
+        )
+
+
+deps.bot.add_cog(Ask())

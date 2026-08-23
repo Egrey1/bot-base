@@ -1,35 +1,49 @@
-bot: Bot
-intents: Intents
-PREFIX: tuple[str]
-TOKEN: str
-VERSION: str
-test_mode: bool
+from disnake import Intents
+from disnake.ext.commands import Bot
+from typing import Any, Callable, Awaitable, List
+import disnake
+
+bot: Bot = ... # type: ignore
+intents: Intents = ... # type: ignore
+PREFIX: tuple[str] = ... # type: ignore
+TOKEN: str = ... # type: ignore
+VERSION: str = ... # type: ignore
+test_mode: bool = ... # type: ignore
+
+class Ask:
+    @staticmethod
+    def add(member_id: int, complete_handler: EventHandler | None = None, error_handler: EventHandler | None = None, checker: Callable[[disnake.Message], disnake.Embed | None] | None = None, args: list = [], kwargs: dict = {}):
+        """
+        Добавление поиска для пользователя
+
+        Params:
+            member_id (int): ID пользователя
+            complete_handler (EventHandler | None): Обработчик успешного выбора элемента
+            error_handler (EventHandler | None): Обработчик ошибки выбора элемента. Кроме сообщения передается дополнительно Embed
+            checker (Callable[[disnake.Message], disnake.Embed | None] | None): Функция проверки сообщения. Если возвращает Embed, то сообщение считается ошибкой и вызывается error_handler
+            args (list): Дополнительные позиционные аргументы для обработчиков
+            kwargs (dict): Дополнительные именованные аргументы для обработчиков
+        """
 
 class Search:
-    def __init__(self, label: str, items: dict[str, Any], member_id: int, complete_handler: 'EventHandler | None' = None, error_handler: 'EventHandler | None' = None) :
+    @staticmethod
+    def add(member_id: int, title: str, items: dict[str, Any], complete_handler: EventHandler | None = None, error_handler: EventHandler | None = None, args: list = [], kwargs: dict = {}) -> disnake.Embed:
         """
-        Создание объекта поиска
+        Добавление поиска для пользователя
 
         Params:
-            label (str): **Оглавление списка предметов для поиска**
-            items (dict[str, Any]): **Словарь предметов для поиска. Ключ это название предмета, значение - сам предмет**
-            member_id (int): **ID пользователя, который ищет предметы**
-            complete_handler: **Обработчик события, когда поиск завершается удачно. В качестве аргумента обработчик принимает объект типа Message, выбранный предмет и ID участника**
-            error_handler: **Обработчик события, когда поиск завершается неудачно. В качестве аргумента обработчик принимает объект типа Message, Embed и int. Сообщение, к которому привязана ошибка, его описание и ID участника**
+            member_id (int): ID пользователя
+            title (str): Заголовок поиска
+            items (dict[str, Any]): Словарь с элементами поиска. Ключ - название элемента, значение - экземпляр элемента
+            complete_handler (EventHandler | None): Обработчик успешного выбора элемента
+            error_handler (EventHandler | None): Обработчик ошибки выбора элемента. Кроме сообщения передается дополнительно Embed
+            args (list): Дополнительные позиционные аргументы для обработчиков
+            kwargs (dict): Дополнительные именованные аргументы для обработчиков
+            
+        Returns:
+            disnake.Embed: Embed с элементами поиска. Его отправлять лучше сразу!
         """
-    
-    async def send_label(self, ctx: Context):
-        """
-        Отправить окно с предметами
-
-        Params:
-            ctx (Context): **Контекст сообщения**
-        """
-    
-    async def on_message_handler(self, message: Message):
-        """
-        Вся проверка и суть поиска. Вызывать строго в обработчике сообщений on_message
-        """
+        ...
 
 class EventHandler:
     events: List[Callable[..., Any]] | None = None
