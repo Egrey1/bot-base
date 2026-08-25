@@ -52,12 +52,12 @@ class EventHandler:
 
 # Статический класс для события спрашивания. Когда бот задает вопрос и ему нужно получить текстовый ответ
 class Ask(commands.Cog):
-    members: dict[int, tuple[EventHandler, EventHandler, Callable[[disnake.Message], disnake.Embed | None] | None, list, dict, bool]] = {}
+    members: dict[int, tuple[EventHandler, EventHandler, Callable[[disnake.Message], Awaitable[disnake.Embed | None]] | None, list, dict, bool]] = {}
     # Список со всеми пользователями для их обработки. Да, такое решение нагружает систему, но это компенсируется очисткой пользователя, если он не отвечает уже как 5 минут
     
     # Добавить нового пользователя в базу 
     @staticmethod
-    def add(member_id: int, complete_handler: EventHandler | None = None, error_handler: EventHandler | None = None, checker: Callable[[disnake.Message], disnake.Embed | None] | None = None, args: list = [], kwargs: dict = {}, bounce: bool = False):
+    def add(member_id: int, complete_handler: EventHandler | None = None, error_handler: EventHandler | None = None, checker: Callable[[disnake.Message], Awaitable[disnake.Embed | None]] | None = None, *, args: list = [], kwargs: dict = {}, bounce: bool = False):
         # Делаем EventHandler и привязываем его к пользователю
         complete_handler = EventHandler.copy(complete_handler)
         error_handler = EventHandler.copy(error_handler)
@@ -85,7 +85,7 @@ class Ask(commands.Cog):
                 Ask.members[message.author.id] = (complete_handler, error_handler, checker, args, kwargs, True)
                 return
             
-            checker_result = checker(message) if checker else None
+            checker_result = (await checker(message)) if checker else None
             
             if isinstance(checker_result, Embed):
                 # Если проверка сообщения не прошла, то вызывается ошибка
@@ -116,7 +116,7 @@ class Search(Ask):
         await error_handler.invokeHandler(message, embed, *args, **kwargs)
     
     @staticmethod
-    def add(member_id: int, title: str, items: dict[str, Any], complete_handler: EventHandler | None = None, error_handler: EventHandler | None = None, args: list = [], kwargs: dict = {}):
+    def add(member_id: int, title: str, items: dict[str, Any], complete_handler: EventHandler | None = None, error_handler: EventHandler | None = None, *, args: list = [], kwargs: dict = {}):
         if len(items) == 0:
             raise ValueError('В Search.add() был передан пустой словарь')
             
@@ -124,7 +124,7 @@ class Search(Ask):
         search_cancel_handler = EventHandler(coro_event=Search.__search_cancel_handler)
         
         # Создаем свою проверку. Делаем ответ только для чисел в нужном диапозоне 
-        def checker(message: disnake.Message):
+        async def checker(message: disnake.Message):
             num = 0
             try:
                 num = int(message.content)
@@ -142,7 +142,7 @@ class Search(Ask):
                 )
                 
         # Вот так страшно это все передаем
-        Ask.add(member_id, search_complete_handler, search_error_handler, checker, [items, complete_handler, error_handler] + args, kwargs)
+        Ask.add(member_id, search_complete_handler, search_cancel_handler, checker, args=([items, complete_handler, error_handler] + args), kwargs=kwargs)
         
         # И строим эмбеды
         embeds = []
@@ -151,7 +151,7 @@ class Search(Ask):
             description='\n'.join([f'**{i + 1}.** {item}' for i, item in enumerate(items.keys())])
         ))
         for i in range(1, (len(items) // 50) + 1):
-            embed.append(Embed(
+            embeds.append(Embed(
                 description='\n'.join([f'**{j + 1}.** {item}' for j, item in enumerate(items.keys())])
             ))
             

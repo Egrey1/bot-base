@@ -15,7 +15,7 @@ class Ask:
     Статический класс для вопросов
     """
     @staticmethod
-    def add(member_id: int, complete_handler: EventHandler | None = None, error_handler: EventHandler | None = None, checker: Callable[[disnake.Message], disnake.Embed | None] | None = None, args: list = [], kwargs: dict = {}):
+    def add(member_id: int, complete_handler: 'EventHandler | None' = None, error_handler: 'EventHandler | None' = None, checker: Callable[[disnake.Message], Awaitable[disnake.Embed | None]] | None = None, args: list = [], kwargs: dict = {}):
         """
         Добавление вопроса
 
@@ -23,7 +23,7 @@ class Ask:
             member_id (int): ID пользователя
             complete_handler (EventHandler | None): Обработчик успешного выбора элемента
             error_handler (EventHandler | None): Обработчик ошибки выбора элемента. Кроме сообщения передается дополнительно Embed
-            checker (Callable[[disnake.Message], disnake.Embed | None] | None): Функция проверки сообщения. Если возвращает Embed, то сообщение считается ошибкой и вызывается error_handler
+            checker (Callable[[disnake.Message], Awaitable[disnake.Embed | None]] | None): Функция проверки сообщения. Если возвращает Embed, то сообщение считается ошибкой и вызывается error_handler
             args (list): Дополнительные позиционные аргументы для обработчиков
             kwargs (dict): Дополнительные именованные аргументы для обработчиков
         """
@@ -33,7 +33,7 @@ class Search:
     Статический класс для поиска и передачи в обработчик экзеемпляров
     """
     @staticmethod
-    def add(member_id: int, title: str, items: dict[str, Any], complete_handler: EventHandler | None = None, error_handler: EventHandler | None = None, args: list = [], kwargs: dict = {}) -> list[disnake.Embed]:
+    def add(member_id: int, title: str, items: dict[str, Any], complete_handler: 'EventHandler | None' = None, error_handler: 'EventHandler | None' = None, args: list = [], kwargs: dict = {}) -> list[disnake.Embed]:
         """
         Добавление поиска
 
@@ -73,7 +73,9 @@ class EventHandler:
         Добавление функции в обработчик
         """
         
-    def add_coro_event(self, event: Callable[..., Awaitable[Any]])
+    def add_coro_event(self, event: Callable[..., Awaitable[Any]]):
         """
         Добавление асинхронной функции в обработчик
         """
+
+    
