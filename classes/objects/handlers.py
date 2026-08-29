@@ -72,7 +72,7 @@ class Ask(commands.Cog):
             del Ask.members[member_id]
             # Запись удаляется "втихую"
     
-    @commands.Cog.listener('on_message')
+    @deps.bot.listen('on_message')
     async def on_message_handler(self, message: Message):
         try:
             if message.author.id not in Ask.members:
@@ -157,6 +157,3 @@ class Search(Ask):
             
         # Напоминаю, боту лучше отправлять по пять таких
         return embeds
-
-
-deps.bot.add_cog(Ask())
